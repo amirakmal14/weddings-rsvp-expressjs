@@ -6,25 +6,51 @@ import { AzureKeyVaultService } from "./AzureKeyVaultService";
 @Injectable()
 export class SpreadSheetsService {
   constructor(private readonly azureKeyVaultService: AzureKeyVaultService) {}
-  private readonly calendars: any[] = [];
-
-  private db = new Database({
-    db: "1vJ7dNspOOhg9iOPuTVNDJ8i4xmMBEu_FUxjqyOH1P_w",
-    table: "Sheet1", // optional, default = Sheet1
-    keyFile: "src/services/wedding-rsvp-416923-b105d4bc4231.json",
-    cacheTimeoutMs: 5000, // optional, default = 5000
-  });
+  private serviceAccountKey: string | undefined = "";
+  private database: Database;
 
   async create(acceptRsvpModel: AcceptRsvpModel) {
-    const key = await this.azureKeyVaultService.getSecrets(
-      "google-spreadsheets-sa-key"
-    );
-    console.log("key", key);
-    // await this.db.load();
-    // this.calendars.push(acceptRsvpModel);
+    try {
+      this.database = await this.getDatabase(
+        acceptRsvpModel.eventId,
+        "Accepted"
+      );
+      await this.database.load();
+      await this.database.insert([
+        {
+          name: acceptRsvpModel.name,
+          attendanceCount: acceptRsvpModel.attendanceCount,
+          comments: acceptRsvpModel.comments,
+        },
+      ]);
+    } catch (error) {
+      console.error("Error creating rsvp:", error.message);
+      throw error;
+    }
   }
 
-  findAll(): any[] {
-    return this.calendars;
+  private async getDatabase(
+    spreadSheetId: string,
+    sheetId: string
+  ): Promise<Database> {
+    if (
+      this.serviceAccountKey === "" ||
+      this.getServiceAccountKey === undefined
+    ) {
+      await this.getServiceAccountKey();
+    }
+
+    return new Database({
+      db: spreadSheetId,
+      table: sheetId, // optional, default = Sheet1
+      keyFile: this.serviceAccountKey,
+      cacheTimeoutMs: 5000, // optional, default = 5000
+    });
+  }
+
+  private async getServiceAccountKey() {
+    this.serviceAccountKey = await this.azureKeyVaultService.getSecrets(
+      "google-spreadsheets-sa-key"
+    );
   }
 }

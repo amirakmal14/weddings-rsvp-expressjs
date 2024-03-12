@@ -9,17 +9,11 @@ export class RsvpController {
   constructor(private readonly spreadSheetsService: SpreadSheetsService) {}
   @Get("/")
   async get() {
-    await this.spreadSheetsService.create(new AcceptRsvpModel());
     return "hello";
   }
 
   @Post("/")
   async post(@BodyParams() payload: AcceptRsvpModel) {
-    //await this.spreadSheetsService.create(undefined);
-  }
-
-  @Put("/")
-  async put(@BodyParams() payload: AcceptRsvpModel) {
-    //await this.spreadSheetsService.create(undefined);
+    await this.spreadSheetsService.create(payload);
   }
 }
