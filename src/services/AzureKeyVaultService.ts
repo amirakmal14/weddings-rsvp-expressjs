@@ -11,7 +11,7 @@ export class AzureKeyVaultService {
     const keyVaultUri = `https://kv-weddings-api.vault.azure.net/`;
 
     // Initialize Azure Key Vault client
-    const credential = new ManagedIdentityCredential();
+    const credential = new ManagedIdentityCredential("userAssignedIdentityId");
     const client = new SecretClient(keyVaultUri, credential);
 
     try {
