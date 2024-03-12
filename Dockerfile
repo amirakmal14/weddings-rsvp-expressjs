@@ -22,7 +22,7 @@ WORKDIR /opt
 
 COPY package.json package-lock.json tsconfig.json tsconfig.compile.json .barrelsby.json ./
 
-RUN npm ci
+RUN npm i
 
 COPY ./src ./src
 
