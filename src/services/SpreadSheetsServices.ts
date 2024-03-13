@@ -2,11 +2,13 @@ import { Injectable } from "@tsed/di";
 import Database from "sheetsql";
 import { AcceptRsvpModel } from "src/models/AcceptRsvpModel";
 import { AzureKeyVaultService } from "./AzureKeyVaultService";
+import path from "path";
+import fs from "fs";
 
 @Injectable()
 export class SpreadSheetsService {
   constructor(private readonly azureKeyVaultService: AzureKeyVaultService) {}
-  private serviceAccountKey: string | undefined = "";
+  private tempFilePath: string = "";
   private database: Database;
 
   async create(acceptRsvpModel: AcceptRsvpModel) {
@@ -33,24 +35,29 @@ export class SpreadSheetsService {
     spreadSheetId: string,
     sheetId: string
   ): Promise<Database> {
-    if (
-      this.serviceAccountKey === "" ||
-      this.getServiceAccountKey === undefined
-    ) {
+    if (this.tempFilePath === "") {
       await this.getServiceAccountKey();
     }
 
     return new Database({
       db: spreadSheetId,
       table: sheetId, // optional, default = Sheet1
-      keyFile: this.serviceAccountKey,
+      keyFile: this.tempFilePath,
       cacheTimeoutMs: 5000, // optional, default = 5000
     });
   }
 
   private async getServiceAccountKey() {
-    this.serviceAccountKey = await this.azureKeyVaultService.getSecrets(
+    const jsonKeyFileContent = await this.azureKeyVaultService.getSecrets(
       "google-spreadsheets-sa-key"
     );
+
+    const tempDir = path.join(__dirname, "temp");
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+
+    this.tempFilePath = path.join(tempDir, "google-serviceaccount.json");
+    fs.writeFileSync(this.tempFilePath, jsonKeyFileContent as string);
   }
 }
