@@ -23,6 +23,7 @@ export class SpreadSheetsService {
           name: acceptRsvpModel.name,
           attendanceCount: acceptRsvpModel.attendanceCount,
           comments: acceptRsvpModel.comments,
+          createdAt: new Date(),
         },
       ]);
     } catch (error) {
