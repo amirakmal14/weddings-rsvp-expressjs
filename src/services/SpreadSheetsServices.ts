@@ -23,7 +23,9 @@ export class SpreadSheetsService {
           name: acceptRsvpModel.name,
           attendanceCount: acceptRsvpModel.attendanceCount,
           comments: acceptRsvpModel.comments,
-          createdAt: new Date(),
+          createdAt: new Date().toLocaleString("en-US", {
+            timeZone: "Asia/Kuala_Lumpur",
+          }),
         },
       ]);
     } catch (error) {
