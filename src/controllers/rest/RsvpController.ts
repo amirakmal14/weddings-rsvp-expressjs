@@ -1,8 +1,9 @@
 import { Controller } from "@tsed/di";
-import { Get, Post, Put } from "@tsed/schema";
+import { Get, Post } from "@tsed/schema";
 import { SpreadSheetsService } from "../../services/SpreadSheetsServices";
-import { BodyParams } from "@tsed/platform-params";
+import { BodyParams, PathParams } from "@tsed/platform-params";
 import { AcceptRsvpModel } from "../../models/AcceptRsvpModel";
+import { WishModel } from "../../models/WishModel";
 
 @Controller("/rsvp")
 export class RsvpController {
@@ -15,5 +16,13 @@ export class RsvpController {
   @Post("/")
   async post(@BodyParams() payload: AcceptRsvpModel) {
     await this.spreadSheetsService.create(payload);
+  }
+
+  @Get("/:eventId/wishes")
+  async getWishesByEventId(
+    @PathParams("eventId") eventId: string
+  ): Promise<WishModel[]> {
+    const wishes = await this.spreadSheetsService.getWishesByEventId(eventId);
+    return wishes;
   }
 }

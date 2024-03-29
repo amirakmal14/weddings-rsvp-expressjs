@@ -1,15 +1,35 @@
 import { Injectable } from "@tsed/di";
 import Database from "sheetsql";
-import { AcceptRsvpModel } from "src/models/AcceptRsvpModel";
+import { AcceptRsvpModel } from "../models/AcceptRsvpModel";
 import { AzureKeyVaultService } from "./AzureKeyVaultService";
 import path from "path";
 import fs from "fs";
+import { WishModel } from "../models/WishModel";
 
 @Injectable()
 export class SpreadSheetsService {
   constructor(private readonly azureKeyVaultService: AzureKeyVaultService) {}
   private tempFilePath: string = "";
   private database: Database;
+
+  async getWishesByEventId(eventId: string): Promise<WishModel[]> {
+    try {
+      this.database = await this.getDatabase(eventId, "Accepted");
+      await this.database.load();
+      const result = await this.database.find();
+
+      const wishes: WishModel[] = result
+        .filter((item: any) => item.comments && item.comments.trim() !== "") // Filter out items where comments are null or whitespace
+        .map((item: any) => {
+          return new WishModel(item.name, item.comments);
+        });
+
+      return wishes;
+    } catch (error) {
+      console.error("Error fetching wishes by event ID:", error.message);
+      throw error;
+    }
+  }
 
   async create(acceptRsvpModel: AcceptRsvpModel) {
     try {
